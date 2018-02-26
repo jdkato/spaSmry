@@ -1,9 +1,13 @@
+.vscode/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 
-# C extensions
+# Cython / C extensions
+cythonize.json
+*.cpp
 *.so
 
 # Distribution / packaging
