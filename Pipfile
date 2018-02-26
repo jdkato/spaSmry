@@ -9,12 +9,3 @@ name = "pypi"
 
 cymem = "*"
 spacy = "*"
-
-
-[dev-packages]
-
-
-
-[requires]
-
-python_version = "3.6"
