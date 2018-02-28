@@ -3,32 +3,9 @@ from collections import defaultdict
 from libcpp.pair cimport pair
 from libcpp.queue cimport priority_queue
 
-from cymem.cymem cimport Pool
 from spacy.tokens.doc cimport Doc
 from spacy.tokens.token cimport Token
 from spacy.tokens.span cimport Span
-
-
-cdef top_n(RankedSentence* sentences, int size, int n):
-    """Return the top-n sentences according their scores.
-    """
-    # We use a `priority_queue` to allow us to find the top-n sentences without
-    # having to sort the entire array.
-    cdef priority_queue[pair[float, int]] queue
-    cdef pair[float, int] entry
-    cdef int i
-
-    for i in range(size):
-        entry.first = sentences[i].score
-        entry.second = i
-        queue.push(entry)
-
-    top = []
-    for i in range(n):
-        top.append(queue.top().second)
-        queue.pop()
-
-    return top
 
 
 cpdef smmry(Doc doc, int n):
@@ -36,7 +13,11 @@ cpdef smmry(Doc doc, int n):
 
     See https://smmry.com/about for more details.
     """
-    cdef Pool mem = Pool()
+    # We use a `priority_queue` to allow us to find the top-n sentences without
+    # having to sort the entire array.
+    cdef priority_queue[pair[float, int]] queue
+    cdef pair[float, int] entry
+
     cdef Token token
     cdef Span sent
     cdef int i
@@ -49,11 +30,14 @@ cpdef smmry(Doc doc, int n):
     sentences = tuple(doc.sents)
     size = len(sentences)
 
-    ranked = <RankedSentence*>mem.alloc(size, sizeof(RankedSentence))
     for i, sent in enumerate(sentences):
-        ranked[i].index = i
-        ranked[i].score = sum([tokens[w.lower_] for w in sent])
+        entry.first = sum([tokens[w.lower_] for w in sent])
+        entry.second = i
+        queue.push(entry)
 
-    return [sentences[i] for i in top_n(ranked, size, n)]
+    top = []
+    for i in range(n):
+        top.append(queue.top().second)
+        queue.pop()
 
-
+    return [sentences[i] for i in top]
